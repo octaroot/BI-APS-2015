@@ -1,6 +1,6 @@
 .data
 						; windlx hack (to have nice rows in memory view)
-hovno:	.space	40
+fill:	.space	40
 						; matrix data
 matrix:	.float	 2, 2, 3, 4, 5, 2, 2, 3, 4, 5, 7
 row_2:	.float	 7, 9, 9,10,11, 7, 9, 9,10,11,14
