@@ -2,14 +2,19 @@
 						; windlx hack (to have nice rows in memory view)
 fill:	.space	40-8
 						; matrix data
-matrix:	.float	 2, 2, 3, 4, 5, 7
-row_2:	.float	 7, 9, 9,10,11,14
-row_3:	.float	13,14,16,16,17,21
-row_4:	.float	19,20,21,23,23,28
-row_5:	.float	25,26,27,28,30,35
+matrix:	.float	 2, 2, 3, 4, 5, 2, 2, 3, 4, 5, 7
+row_2:	.float	 7, 9, 9, 10, 11, 7, 9, 9, 10, 11, 14
+row_3:	.float	 13, 14, 16, 16, 17, 13, 14, 16, 16, 17, 21
+row_4:	.float	 19, 20, 21, 23, 23, 19, 20, 21, 23, 23, 28
+row_5:	.float	 25, 26, 27, 28, 30, 25, 26, 27, 28, 30, 35
+row_6:	.float	 9, 11, 13, 11, 15, 12, 12, 13, 14, 15, 71
+row_7:	.float	 29, 15, 14, 14, 15, 12, 12, 13, 14, 15, 71
+row_8:	.float	 39, 14, 15, 15, 15, 12, 12, 13, 14, 15, 71
+row_9:	.float	 49, 13, 16, 18, 15, 12, 12, 13, 14, 15, 71
+row_A:	.float	 59, 12, 17, 19, 15, 12, 12, 13, 14, 15, 71
 
 .text
-	addui	r1, r0, 5			; N (user input)
+	addui	r1, r0, 10			; N (user input)
 	addu	r11, r0, r1			; clone
 	
 	lhi	r2, matrix >> 16		; load matrix address
