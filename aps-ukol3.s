@@ -62,13 +62,12 @@ loop1:
 
 loop2:	
 	
-	lf	f0, (r5)
-	lf	f1, (r6)
+	lf	f0, (r5)			; base row element
+	lf	f1, (r6)			; target row element
+
+	multf	f0, f0, f2			; reordered - performance gain
 
 	addui	r5, r5, 4			; semi-independent (base pointer advance)
-
-	multf	f0, f0, f2
-	
 	subui	r3, r3, 1			; independent instruction (loop2 ctrl)
 
 	subf	f0, f1, f0

@@ -1,2 +1,1 @@
-abs. cycle count:	6003	1:04 (cca)
-			
+abs. cycle count:	5718	1:04 (cca)
