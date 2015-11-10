@@ -49,11 +49,16 @@ loop1:
 
 	divf	f2, f1, f0			; f2 = ratio to multiply row elements
 
-	addu	r5, r0, r2			; (independent) base row pointer reset
-	addui	r3, r1, 1			; independed instruction (loop2 ctrl: N+1 cols)
+	sw	(r6), r0			; first cell will always be set to zero
+
+	addui	r6, r6, 4			; ordered to perform better
+	
+	addui	r5, r2, 4			; (independent) base row pointer reset (+1, that we "calculated" already)
+	addui	r3, r1, 0			; independed instruction (loop2 ctrl: N+1 cols) + -1 (first cell always 0)
 
 						; now we step in the most-inner loop, to iterate over row elements
 						; to multiply and subtract them from the rest of the rows
+
 
 loop2:	
 	
