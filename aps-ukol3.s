@@ -31,7 +31,7 @@ N:	.byte	10
 	lhi	r29,(_stack + 128>>16)&0xffff	; setup stack
 	subui	r1, r11, 1			; N-1 (independent instruction)
 	addui	r29,r29,(_stack + 128)&0xffff
-	sd	(r29), f2
+	sd	(r29), f2			; push f2,f3
 
 loop0:
 
@@ -72,17 +72,18 @@ loop1:
 
 	lf	f0, (r8)			; base row element
 	lf	f1, (r9)			; target row element
-loop2:	
 	multf	f0, f0, f2			; reordered - performance gain
+loop2:	
 
 	addui	r8, r8, 4			; semi-independent (base pointer advance)
 	subui	r3, r3, 1			; independent instruction (loop2 ctrl)
 
 	subf	f3, f1, f0
 	
-	addui	r9, r9, 4			; ordered to perform better
+	addui	r9, r9, 4			; reordered - performance gain
 	lf	f0, (r8)			; (prefetch) base row element
 	lf	f1, (r9)			; (prefetch) target row element
+	multf	f0, f0, f2			; reordered - performance gain
 
 	sf	-4(r9), f3			; save result
 
