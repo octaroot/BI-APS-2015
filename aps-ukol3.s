@@ -14,86 +14,80 @@ row_9:	.float	 49, 13, 16, 18, 15, 12, 12, 13, 14, 15, 71
 row_A:	.float	 59, 12, 17, 19, 15, 12, 12, 13, 14, 15, 71
 
 .text
-	addui	r1, r0, 10			; N (user input)
-	addu	r11, r0, r1			; clone
+	addui	r11, r0, 10			; N (user input)
 	
 	lhi	r2, matrix >> 16		; load matrix address
+	subui	r1, r11, 1			; N-1 (independent instruction)
 	addui	r2, r2, matrix & 0xffff
-
-
-	addu	r23, r0, r0			; vynulujeme pametovy padding
 
 loop0:
 
 						; calculate the pointer to the row following the base row
 						; 	baseRow + wordLength*(N + 1)
-	sll	r7, r11, 2			; N * 4
-	addui	r6, r2, 4			; nextRow = baseRow + wordLength
-	addu	r6, r6, r7			; nextRow += N * 4
+	sll	r10, r11, 2			; N * 4
+	addui	r9, r2, 4			; nextRow = baseRow + wordLength
+	addu	r9, r9, r10			; nextRow += N * 4
 	
 
-	addui	r22, r6, 4			; ulozime si nextRow bokem, pro pristi pruchod to totiz bude baseRow
+	addui	r24, r9, 4			; ulozime si nextRow bokem, pro pristi pruchod to totiz bude baseRow
 						; 4 pricitame, protoze i prvni sloupec bude vyresen
 
 
 						; this is the "middle" loop. It is responsible for processing
 						; a single row (calc the ratio) and mult/sub all following rows
 
-	subui	r7, r1,	1			; loop ctrl (N-1 rows to process)
+	addu	r10, r1,	r0			; loop ctrl (N-1 rows to process)
 loop1:	
 						; first we calculate the ratio to multiply the row with
 	lf	f0, (r2)
-	lf	f1, (r6)
+	lf	f1, (r9)
 
-	subui	r7, r7, 1			; independed instruction (loop1 ctrl)
+	subui	r10, r10, 1			; independed instruction (loop1 ctrl)
 
 	divf	f2, f1, f0			; f2 = ratio to multiply row elements
 
-	sw	(r6), r0			; first cell will always be set to zero
+	sw	(r9), r0			; first cell will always be set to zero
 
-	addui	r6, r6, 4			; ordered to perform better
+	addui	r9, r9, 4			; ordered to perform better
 	
-	addui	r5, r2, 4			; (independent) base row pointer reset (+1, that we "calculated" already)
-	addui	r3, r1, 0			; independed instruction (loop2 ctrl: N+1 cols) + -1 (first cell always 0)
+	addui	r8, r2, 4			; (independent) base row pointer reset (+1, that we "calculated" already)
+	addui	r3, r1, 1			; independed instruction (loop2 ctrl: N+1 cols) + -1 (first cell always 0)
 
 						; now we step in the most-inner loop, to iterate over row elements
 						; to multiply and subtract them from the rest of the rows
 
 
-	lf	f0, (r5)			; base row element
-	lf	f1, (r6)			; target row element
+	lf	f0, (r8)			; base row element
+	lf	f1, (r9)			; target row element
 loop2:	
 	multf	f0, f0, f2			; reordered - performance gain
 
-	addui	r5, r5, 4			; semi-independent (base pointer advance)
+	addui	r8, r8, 4			; semi-independent (base pointer advance)
 	subui	r3, r3, 1			; independent instruction (loop2 ctrl)
 
 	subf	f3, f1, f0
 	
-	addui	r6, r6, 4			; ordered to perform better
-	lf	f0, (r5)			; (prefetch) base row element
-	lf	f1, (r6)			; (prefetch) target row element
+	addui	r9, r9, 4			; ordered to perform better
+	lf	f0, (r8)			; (prefetch) base row element
+	lf	f1, (r9)			; (prefetch) target row element
 
-	sf	-4(r6), f3			; save result
+	sf	-4(r9), f3			; save result
 
 
 	bnez	r3, loop2
 
-	addu	r6, r6, r23			; aplikace leveho paddingu
-	bnez	r7, loop1
+	addu	r9, r9, r25			; aplikace leveho paddingu
+	bnez	r10, loop1
 
 
 
 
 
-
-	addu	r2, r22, r0			; puvodni nextRow ted dame do ukazatele na matrix, protoze baseRow uz jsme zpracovali cely
-	addui	r23, r23, 4			; a levy padding taky zajistime	
 	subui	r1, r1, 1			; N--
+	addu	r2, r24, r0			; puvodni nextRow ted dame do ukazatele na matrix, protoze baseRow uz jsme zpracovali cely
+	addui	r25, r25, 4			; a levy padding taky zajistime	
 
-	seq	r24, r1, 1
-
-	beqz	r24, loop0
+	bnez	r1, loop0
 
 
 exit:	trap	0
