@@ -60,21 +60,21 @@ loop1:
 						; to multiply and subtract them from the rest of the rows
 
 
-loop2:	
-	
 	lf	f0, (r5)			; base row element
 	lf	f1, (r6)			; target row element
-
+loop2:	
 	multf	f0, f0, f2			; reordered - performance gain
 
 	addui	r5, r5, 4			; semi-independent (base pointer advance)
 	subui	r3, r3, 1			; independent instruction (loop2 ctrl)
 
-	subf	f0, f1, f0
+	subf	f3, f1, f0
 	
 	addui	r6, r6, 4			; ordered to perform better
-	sf	-4(r6), f0			; (but we do need a constant here)
+	lf	f0, (r5)			; (prefetch) base row element
+	lf	f1, (r6)			; (prefetch) target row element
 
+	sf	-4(r6), f3			; save result
 
 
 	bnez	r3, loop2
