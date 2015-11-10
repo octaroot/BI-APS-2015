@@ -1,6 +1,6 @@
 .data
 						; windlx hack (to have nice rows in memory view)
-fill:	.space	40-8
+fill:	.space	40
 						; matrix data
 matrix:	.float	 2, 2, 3, 4, 5, 2, 2, 3, 4, 5, 7
 row_2:	.float	 7, 9, 9, 10, 11, 7, 9, 9, 10, 11, 14
@@ -40,37 +40,42 @@ loop0:
 						; a single row (calc the ratio) and mult/sub all following rows
 
 	subui	r7, r1,	1			; loop ctrl (N-1 rows to process)
-loop1:	subui	r7, r7, 1
-	addu	r5, r0, r2			; base row pointer reset
+loop1:	addu	r5, r0, r2			; base row pointer reset
 						; first we calculate the ratio to multiply the row with
 
-	
 	lf	f0, (r5)
 	lf	f1, (r6)
 
+	subui	r7, r7, 1			; independed instruction (loop1 ctrl)
+
 	divf	f2, f1, f0			; f2 = ratio to multiply row elements
+
+	addui	r3, r1, 1			; independed instruction (loop2 ctrl: N+1 cols)
 
 						; now we step in the most-inner loop, to iterate over row elements
 						; to multiply and subtract them from the rest of the rows
 
-	addui	r3, r1, 1			; loop ctrl (N+1 cols)
-loop2:	subui	r3, r3, 1
+loop2:	
 	
 	lf	f0, (r5)
 	lf	f1, (r6)
 
+	addui	r5, r5, 4			; semi-independent (base pointer advance)
+
 	multf	f0, f0, f2
+	
+	subui	r3, r3, 1			; independent instruction (loop2 ctrl)
+
 	subf	f0, f1, f0
 	
-	sf	(r6), f0
+	addui	r6, r6, 4			; ordered to perform better
+	sf	-4(r6), f0			; (but we do need a constant here)
 
-	addui	r5, r5, 4
-	addui	r6, r6, 4
+
 
 	bnez	r3, loop2
 
 	addu	r6, r6, r23			; aplikace leveho paddingu
-
 	bnez	r7, loop1
 
 
