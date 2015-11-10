@@ -35,7 +35,7 @@ row_A:	.float	25,26,27,28,30,25,26,27,28,30,35
 
 						; calculate the pointer to the row following the base row
 						; 	baseRow + wordLength*(N + 1)
-	shl	r7, r1, 2			; N * 4
+	sll	r7, r1, 2			; N * 4
 	addui	r6, r2, 4			; nextRow = baseRow + wordLength
 	addu	r6, r6, r7			; nextRow += N * 4
 
