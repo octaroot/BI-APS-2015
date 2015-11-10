@@ -40,16 +40,16 @@ loop0:
 						; a single row (calc the ratio) and mult/sub all following rows
 
 	subui	r7, r1,	1			; loop ctrl (N-1 rows to process)
-loop1:	addu	r5, r0, r2			; base row pointer reset
+loop1:	
 						; first we calculate the ratio to multiply the row with
-
-	lf	f0, (r5)
+	lf	f0, (r2)
 	lf	f1, (r6)
 
 	subui	r7, r7, 1			; independed instruction (loop1 ctrl)
 
 	divf	f2, f1, f0			; f2 = ratio to multiply row elements
 
+	addu	r5, r0, r2			; (independent) base row pointer reset
 	addui	r3, r1, 1			; independed instruction (loop2 ctrl: N+1 cols)
 
 						; now we step in the most-inner loop, to iterate over row elements
