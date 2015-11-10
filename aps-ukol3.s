@@ -1,8 +1,6 @@
 .data
-						; windlx hack (to have nice rows in memory view)
-fill:	.space	40
-						; matrix data
-matrix:	.float	 2, 2, 3, 4, 5, 2, 2, 3, 4, 5, 7
+						; input matrix
+A:	.float	 2, 2, 3, 4, 5, 2, 2, 3, 4, 5, 7
 row_2:	.float	 7, 9, 9, 10, 11, 7, 9, 9, 10, 11, 14
 row_3:	.float	 13, 14, 16, 16, 17, 13, 14, 16, 16, 17, 21
 row_4:	.float	 19, 20, 21, 23, 23, 19, 20, 21, 23, 23, 28
@@ -13,12 +11,27 @@ row_8:	.float	 39, 14, 15, 15, 15, 12, 12, 13, 14, 15, 71
 row_9:	.float	 49, 13, 16, 18, 15, 12, 12, 13, 14, 15, 71
 row_A:	.float	 59, 12, 17, 19, 15, 12, 12, 13, 14, 15, 71
 
+						; N * N * sizeof(float)
+Y:	.space	400
+						; stack
+_stack:	.space	128
+						; N
+N:	.byte	10
+
+
+
+; free registry jsou r12,13,14,15
+
 .text
-	addui	r11, r0, 10			; N (user input)
-	
-	lhi	r2, matrix >> 16		; load matrix address
+	lhi	r11, N >> 16			; load N address
+	lhi	r2, A >> 16			; load input matrix address
+	addui	r2, r2, A & 0xffff
+	lb	r11, N & 0xffff(r11)		; get N from memory
+
+	lhi	r29,(_stack + 128>>16)&0xffff	; setup stack
 	subui	r1, r11, 1			; N-1 (independent instruction)
-	addui	r2, r2, matrix & 0xffff
+	addui	r29,r29,(_stack + 128)&0xffff
+	sd	(r29), f2
 
 loop0:
 
@@ -36,7 +49,7 @@ loop0:
 						; this is the "middle" loop. It is responsible for processing
 						; a single row (calc the ratio) and mult/sub all following rows
 
-	addu	r10, r1,	r0			; loop ctrl (N-1 rows to process)
+	addu	r10, r1,r0			; loop ctrl (N-1 rows to process)
 loop1:	
 						; first we calculate the ratio to multiply the row with
 	lf	f0, (r2)
@@ -81,8 +94,6 @@ loop2:
 
 
 
-
-
 	subui	r1, r1, 1			; N--
 	addu	r2, r24, r0			; puvodni nextRow ted dame do ukazatele na matrix, protoze baseRow uz jsme zpracovali cely
 	addui	r25, r25, 4			; a levy padding taky zajistime	
@@ -90,4 +101,5 @@ loop2:
 	bnez	r1, loop0
 
 
-exit:	trap	0
+exit:	ld	f2, (r29)
+	trap	0
