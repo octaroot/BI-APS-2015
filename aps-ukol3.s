@@ -33,9 +33,9 @@ N:	.byte	10
 	addui	r2, r2, A & 0xffff
 	lb	r11, N & 0xffff(r11)		; get N from memory
 
-	lhi	r29,(_stack + 128>>16)&0xffff	; setup stack
+	lhi	r29,(_stack>>16)&0xffff	; setup stack
 	subui	r1, r11, 1			; N-1 (independent instruction)
-	addui	r29,r29,(_stack + 128)&0xffff
+	addui	r29,r29,(_stack)&0xffff
 	sd	(r29), f2			; push f2,f3
 	sd	8(r29), f4			; push f4,f5
 
@@ -44,12 +44,14 @@ loop0:
 
 
 	lf	f0, (r2)			; base row - first element
+
+	sll	r10, r11, 2			; N * 4 (independed)
 	
 	divf	f4, f5, f0			; f4 = 1/baserow
 
 						; calculate the pointer to the row following the base row
 						; 	baseRow + wordLength*(N + 1)
-	sll	r10, r11, 2			; N * 4
+						; N * 4 (already calculated 2 instructions before)
 	addui	r9, r2, 4			; nextRow = baseRow + wordLength
 	addu	r9, r9, r10			; nextRow += N * 4
 	
@@ -115,7 +117,42 @@ loop2:
 
 	bnez	r1, loop0
 
+						; we are done
+						; copy the results to Y
 
-exit:	ld	f2, (r29)
+
+	lhi	r3, N >> 16			; load N address
+	lhi	r1, A >> 16			; load input matrix address
+	lb	r3, N & 0xffff(r3)		; get N from memory
+	addui	r1, r1, A & 0xffff
+	lhi	r2, Y >> 16			; load output matrix address
+	addui	r5, r3, 1			; N+1
+	addui	r2, r2, Y & 0xffff
+
+	multu	r3, r3, r5			; N*N+1 elements
+	andi	r4, r3, 0x0003			; matrix has N*N+1 dim, 2 is a guaranteed factor
+	
+	beqz	r4, copy4
+
+	ld	f0, (r1)			; if 4 is not a factor
+	addui	r1, r1, 8
+	subui	r3, r3, 2
+	sd	(r2), f0
+	addui	r2, r2, 8
+	
+
+copy4:	ld	f0, (r1)
+	ld	f2, 8(r1)
+	addui	r1, r1, 16
+	sd	(r2), f0
+	sd	8(r2), f2
+	subui	r3, r3, 4
+	addui	r2, r2, 16
+	bnez	r3, copy4
+
+	
+
+exit:	ld	f2, (r29)			; restore f2-f5 registers
 	ld	f4, 8(r29)
+
 	trap	0
