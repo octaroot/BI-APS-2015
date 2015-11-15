@@ -23,6 +23,11 @@ N:	.byte	10
 ; free registry jsou r12,13,14,15
 
 .text
+
+
+	lhi	r11, 0x3f80			; floating point representation of 1
+	movi2fp	f5, r11
+	
 	lhi	r11, N >> 16			; load N address
 	lhi	r2, A >> 16			; load input matrix address
 	addui	r2, r2, A & 0xffff
@@ -32,8 +37,15 @@ N:	.byte	10
 	subui	r1, r11, 1			; N-1 (independent instruction)
 	addui	r29,r29,(_stack + 128)&0xffff
 	sd	(r29), f2			; push f2,f3
+	sd	8(r29), f4			; push f4,f5
+
 
 loop0:
+
+
+	lf	f0, (r2)			; base row - first element
+	
+	divf	f4, f5, f0			; f4 = 1/baserow
 
 						; calculate the pointer to the row following the base row
 						; 	baseRow + wordLength*(N + 1)
@@ -50,14 +62,16 @@ loop0:
 						; a single row (calc the ratio) and mult/sub all following rows
 
 	addu	r10, r1,r0			; loop ctrl (N-1 rows to process)
+
+
+
 loop1:	
 						; first we calculate the ratio to multiply the row with
-	lf	f0, (r2)
 	lf	f1, (r9)
 
 	subui	r10, r10, 1			; independed instruction (loop1 ctrl)
 
-	divf	f2, f1, f0			; f2 = ratio to multiply row elements
+	multf	f2, f1, f4			; f2 = ratio to multiply row elements
 
 	sw	(r9), r0			; first cell will always be set to zero
 
@@ -103,4 +117,5 @@ loop2:
 
 
 exit:	ld	f2, (r29)
+	ld	f4, 8(r29)
 	trap	0
