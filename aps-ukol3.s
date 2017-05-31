@@ -28,21 +28,32 @@ row_A:	.float	25,26,27,28,30,25,26,27,28,30,35
 ;
 
 .text
-	addui	r1, r0, 10			; 5 (beware, N is hardcoded a couple lines lower, when setting R6 GPR)
-	lhi	r2, matrix >> 16		; matrix
+	addui	r1, r0, 10			; N (user input)
+	lhi	r2, matrix >> 16		; load matrix address
 	addui	r2, r2, matrix & 0xffff
 
-	addui	r6, r2, 11*4			; row following the base row
-						; base row reseted in loop1
-	
+
+						; calculate the pointer to the row following the base row
+						; 	baseRow + wordLength*(N + 1)
+	shl	r7, r1, 2			; N * 4
+	addui	r6, r2, 4			; nextRow = baseRow + wordLength
+	addu	r6, r6, r7			; nextRow += N * 4
+
+
+						; this is the "middle" loop. It is responsible for processing
+						; a single row (calc the ratio) and mult/sub all following rows
+
 	subui	r7, r1,	1			; loop ctrl (N-1 rows to process)
 loop1:	subui	r7, r7, 1
 	addu	r5, r0, r2			; base row pointer reset
-
+						; first we calculate the ratio to multiply the row with
 	lf	f0, (r5)
 	lf	f1, (r6)
 
 	divf	f2, f1, f0			; f2 = ratio to multiply row elements
+
+						; now we step in the most-inner loop, to iterate over row elements
+						; to multiply and subtract them from the rest of the rows
 
 	addui	r3, r1, 1			; loop ctrl (N+1 cols)
 loop2:	subui	r3, r3, 1
@@ -59,7 +70,6 @@ loop2:	subui	r3, r3, 1
 	addui	r6, r6, 4
 
 	bnez	r3, loop2
-	trap	0
 	bnez	r7, loop1
 
 
